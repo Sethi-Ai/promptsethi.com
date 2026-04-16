@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Sethi.ai</title>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Inter;background:#111;color:#fff}
+.container{max-width:720px;margin:auto;padding:20px}
+.header{display:flex;justify-content:space-between;margin-bottom:20px}
+.logo{font-family:Anton}
+.logo span{color:#F47A1F}
+.insta{color:#BDBDBD;text-decoration:none}
+h1{text-align:center}
+.subtitle{text-align:center;color:#BDBDBD;margin-bottom:20px}
+.card{background:#2A2A2A;padding:16px;margin-bottom:12px;border-radius:10px}
+a{text-decoration:none;color:inherit}
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="header">
+<div class="logo">SETHI<span>.AI</span></div>
+<a class="insta" href="https://instagram.com/sethi.ai">@sethi.ai</a>
+</div>
+
+<h1>AI Prompts & Playbooks</h1>
+<p class="subtitle">Explore prompts and playbooks</p>
+
+<div id="list"></div>
+
+</div>
+
+<script>
+async function load(){
+  const list = document.getElementById("list");
+
+  const prompts = await fetch('/prompts/index.json').then(r=>r.json());
+  const playbooks = await fetch('/playbooks/index.json').then(r=>r.json());
+
+  const all = [...playbooks.map(p=>({...p,type:'Playbook'})), ...prompts.map(p=>({...p,type:'Prompt'}))];
+
+  all.forEach(item=>{
+    list.innerHTML += `
+      <a href="${item.url}">
+        <div class="card">
+          <div><strong>${item.type}</strong></div>
+          <div>${item.title}</div>
+          <div style="color:#BDBDBD;font-size:13px">${item.description}</div>
+        </div>
+      </a>
+    `;
+  });
+}
+load();
+</script>
+
+</body>
+</html>
