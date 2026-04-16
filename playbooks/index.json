@@ -5,3 +5,10 @@
     "url": "/playbooks/youtube-audio-system/"
   }
 ]
+{
+  "title": "sethi audio guide,
+  "description": "Make music with suno and earn.",
+  "url": "/prompts/sethi-audio-guide/",
+  "type": "Playbook",
+  "tags": ["tag1", "tag2"]
+}
