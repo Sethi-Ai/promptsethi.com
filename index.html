@@ -118,6 +118,7 @@
   .tag-playbook { background: rgba(244,122,31,0.12); color: var(--orange); border: 1px solid rgba(244,122,31,0.25); }
   .tag-prompt   { background: rgba(232,184,72,0.10); color: var(--gold);   border: 1px solid rgba(232,184,72,0.20); }
   .tag-skill    { background: rgba(100,180,255,0.10); color: #64B4FF;      border: 1px solid rgba(100,180,255,0.20); }
+  .tag-premium  { background: var(--orange);                color: var(--white);   border: 1px solid var(--orange); }
 
   .card-title { font-family: 'Anton', sans-serif; font-size: 18px; line-height: 1.2; color: var(--white); letter-spacing: 0.3px; margin-bottom: 6px; }
   .card-desc  { font-size: 14px; line-height: 1.55; color: #888; font-weight: 400; }
@@ -198,6 +199,7 @@
         <button class="pill"        data-filter="Prompt"   onclick="setFilter(this)"><span class="dot"></span> Prompts</button>
         <button class="pill"        data-filter="Playbook" onclick="setFilter(this)"><span class="dot"></span> Playbooks</button>
         <button class="pill"        data-filter="Skill"    onclick="setFilter(this)"><span class="dot"></span> Claude Skills</button>
+        <button class="pill"        data-filter="Premium"  onclick="setFilter(this)"><span class="dot"></span> Premium</button>
       </div>
     </div>
 
@@ -256,7 +258,7 @@
     if (!items.length) { list.innerHTML = '<div class="empty">Nothing here yet.</div>'; return; }
 
     list.innerHTML = items.map(item => {
-      const tagClass = item.type === 'Playbook' ? 'tag-playbook' : item.type === 'Skill' ? 'tag-skill' : 'tag-prompt';
+      const tagClass = item.type === 'Playbook' ? 'tag-playbook' : item.type === 'Skill' ? 'tag-skill' : item.type === 'Premium' ? 'tag-premium' : 'tag-prompt';
       const copyBtn  = item.type === 'Prompt'
         ? `<button class="copy-btn" onclick="copyPrompt(event,'${encodeURIComponent(item.url)}',this)">
              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy
