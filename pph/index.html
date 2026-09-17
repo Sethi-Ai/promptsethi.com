@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Poster Print Hub — A4 Layout Tool</title>
+<style>
+  :root{
+    --ink:#1f2e21;
+    --paper:#faf7f0;
+    --line:#d9d4c2;
+    --accent:#2f5233;
+    --accent-dark:#203823;
+    --accent-soft:#e6ebe3;
+    --muted:#6c7268;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif;
+    background:var(--paper);
+    color:var(--ink);
+  }
+  header{
+    padding:26px 32px;
+    background:var(--accent);
+    border-bottom:1px solid var(--accent-dark);
+  }
+  header h1{
+    margin:0 0 4px;
+    font-size:25px;
+    font-weight:600;
+    letter-spacing:.2px;
+    color:var(--paper);
+  }
+  header p{
+    margin:0;
+    color:rgba(250,247,240,.82);
+    font-size:13.5px;
+    max-width:640px;
+    line-height:1.5;
+  }
+
+  .tabs{
+    display:flex;
+    gap:4px;
+    padding:0 32px;
+    border-bottom:1px solid var(--line);
+    background:#fff;
+  }
+  .tab-btn{
+    font-family:inherit;
+    font-size:14px;
+    padding:13px 6px;
+    margin-right:22px;
+    background:none;
+    border:none;
+    border-bottom:2px solid transparent;
+    color:var(--muted);
+    cursor:pointer;
+  }
+  .tab-btn.active{
+    color:var(--accent);
+    border-bottom-color:var(--accent);
+    font-weight:600;
+  }
+  .tab-btn:hover{color:var(--accent);}
+
+  main{
+    padding:30px 32px 60px;
+    max-width:920px;
+  }
+  .tab-panel.hidden{display:none;}
+  .tab-desc{
+    color:var(--muted);
+    font-size:13.5px;
+    margin:0 0 22px;
+    max-width:580px;
+    line-height:1.55;
+  }
+
+  .slot-grid{display:flex;gap:18px;flex-wrap:wrap;}
+  .slot-grid.quad{display:grid;grid-template-columns:repeat(2,150px);gap:14px;width:max-content;}
+  .slot{
+    width:150px;
+    aspect-ratio:148/210;
+    border:1.5px dashed var(--line);
+    border-radius:2px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    cursor:pointer;
+    background:#fff;
+    overflow:hidden;
+    text-align:center;
+  }
+  .slot:hover{border-color:var(--accent);}
+  .slot.filled{border-style:solid;border-color:var(--line);}
+  .slot img{width:100%;height:100%;object-fit:cover;display:block;}
+  .slot .plus{font-size:26px;color:var(--muted);line-height:1;}
+  .slot .label{
+    position:absolute;bottom:8px;left:0;right:0;
+    font-size:11px;color:var(--muted);
+    pointer-events:none;
+  }
+  .slot .remove{
+    position:absolute;top:4px;right:4px;
+    width:20px;height:20px;
+    background:rgba(20,20,18,.62);
+    color:#fff;border:none;border-radius:50%;
+    font-size:12px;line-height:20px;text-align:center;
+    cursor:pointer;
+  }
+
+  .tab-actions{display:flex;gap:10px;margin-top:24px;align-items:center;}
+  button.primary{
+    font-family:inherit;font-size:14px;padding:11px 16px;
+    background:var(--accent);color:#fff;border:none;border-radius:2px;
+    cursor:pointer;letter-spacing:.2px;
+  }
+  button.primary:disabled{background:#b9b9b0;cursor:not-allowed;}
+  button.primary:hover:not(:disabled){background:var(--accent-dark);}
+  button.secondary{
+    font-family:inherit;font-size:12.5px;padding:9px 13px;
+    background:none;color:var(--accent);border:1px solid var(--line);
+    border-radius:2px;cursor:pointer;
+  }
+  button.secondary:disabled{color:var(--muted);cursor:not-allowed;}
+  button.secondary:hover:not(:disabled){border-color:var(--accent);}
+  .status{font-size:12px;color:var(--accent);}
+
+  /* --- custom cut-sheet tab --- */
+  .custom-layout{display:grid;grid-template-columns:300px 1fr;gap:28px;}
+  .drop{
+    border:1.5px dashed var(--line);border-radius:2px;padding:24px 14px;
+    text-align:center;color:var(--muted);font-size:13.5px;cursor:pointer;
+    transition:border-color .15s, background .15s;
+  }
+  .drop.drag{border-color:var(--accent);background:var(--accent-soft);}
+  .drop input{display:none;}
+  .hint{font-size:12px;color:var(--muted);line-height:1.5;margin-top:8px;}
+  .divider{border:none;border-top:1px solid var(--line);margin:16px 0;}
+  .field{display:flex;align-items:center;justify-content:space-between;font-size:13px;gap:8px;margin-bottom:12px;}
+  .field input[type=number]{
+    width:64px;font-family:inherit;font-size:13px;padding:4px 6px;
+    border:1px solid var(--line);border-radius:2px;background:#fff;
+  }
+  .list{max-height:520px;overflow-y:auto;}
+  .empty{color:var(--muted);font-size:13.5px;}
+  .card{
+    display:grid;grid-template-columns:56px 1fr auto;gap:12px;align-items:center;
+    padding:10px 0;border-bottom:1px solid var(--line);
+  }
+  .card img{width:56px;height:56px;object-fit:cover;border:1px solid var(--line);background:#fff;}
+  .card .meta{font-size:12.5px;}
+  .card .meta .name{
+    display:block;margin-bottom:4px;max-width:260px;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .card .meta .size-row{display:flex;align-items:center;gap:6px;color:var(--muted);}
+  .card .meta .size-row input{
+    width:48px;font-family:inherit;font-size:12px;padding:3px 5px;
+    border:1px solid var(--line);border-radius:2px;
+  }
+  .remove-link{border:none;background:none;color:var(--muted);cursor:pointer;font-size:12.5px;text-decoration:underline;}
+  .remove-link:hover{color:#a33;}
+
+  #printArea{display:none;}
+  @media print{
+    header,.tabs,main{display:none !important;}
+    body{background:#fff;}
+    #printArea{display:block;}
+    .a4-page{page-break-after:always;box-shadow:none !important;border:none !important;}
+    .a4-page:last-child{page-break-after:auto;}
+  }
+
+  .a4-page{position:relative;width:210mm;height:297mm;background:#fff;overflow:hidden;}
+  .a4-page.landscape{width:297mm;height:210mm;}
+
+  .a5-half{
+    position:absolute;top:0;width:148.5mm;height:210mm;
+    display:flex;align-items:center;justify-content:center;
+    box-sizing:border-box;padding:1mm;
+  }
+  .a5-half img{max-width:100%;max-height:100%;object-fit:contain;}
+  .a5-half.left{left:0;border-right:0.3mm dashed #999;}
+  .a5-half.right{left:148.5mm;}
+
+  .a4-page.grid4{display:grid;grid-template-columns:105mm 105mm;grid-template-rows:148.5mm 148.5mm;}
+  .a6-cell{
+    display:flex;align-items:center;justify-content:center;
+    box-sizing:border-box;padding:1mm;overflow:hidden;
+  }
+  .a6-cell img{max-width:100%;max-height:100%;object-fit:contain;}
+  .a6-cell:nth-child(1){border-right:0.3mm dashed #999;border-bottom:0.3mm dashed #999;}
+  .a6-cell:nth-child(2){border-bottom:0.3mm dashed #999;}
+  .a6-cell:nth-child(3){border-right:0.3mm dashed #999;}
+
+  .cut-item{
+    position:absolute;border:0.3mm dashed #999;box-sizing:border-box;
+    display:flex;align-items:center;justify-content:center;overflow:hidden;
+  }
+  .cut-item img{width:100%;height:100%;object-fit:contain;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Poster Print Hub</h1>
+  <p>A local tool for laying out images onto A4 sheets before printing. Runs entirely in this browser tab — nothing leaves your laptop.</p>
+</header>
+
+<nav class="tabs">
+  <button class="tab-btn active" data-tab="pair">A5 Zone</button>
+  <button class="tab-btn" data-tab="quad">A6 Zone</button>
+  <button class="tab-btn" data-tab="custom">Stamp Zone</button>
+</nav>
+
+<main>
+
+  <!-- ===== TAB: 2-UP ===== -->
+  <section class="tab-panel" id="tab-pair">
+    <p class="tab-desc">Two portrait images, placed side by side as two A5 halves on one A4 landscape sheet. Each image fills its half edge to edge — no wasted margin.</p>
+    <div class="slot-grid" id="pairSlots"></div>
+    <div class="tab-actions">
+      <button class="primary" id="pairPdfBtn" disabled>Download A4 PDF</button>
+      <button class="secondary" id="pairPrintBtn" disabled>Print directly</button>
+      <span class="status" id="pairStatus"></span>
+    </div>
+  </section>
+
+  <!-- ===== TAB: 4-UP ===== -->
+  <section class="tab-panel hidden" id="tab-quad">
+    <p class="tab-desc">Four portrait images, arranged 2×2. Each one is sized to exactly a quarter of an A4 sheet — that's A6, the same proportions as A5 — so the whole page is used and nothing is wasted.</p>
+    <div class="slot-grid quad" id="quadSlots"></div>
+    <div class="tab-actions">
+      <button class="primary" id="quadPdfBtn" disabled>Download A4 PDF</button>
+      <button class="secondary" id="quadPrintBtn" disabled>Print directly</button>
+      <span class="status" id="quadStatus"></span>
+    </div>
+  </section>
+
+  <!-- ===== TAB: CUSTOM ===== -->
+  <section class="tab-panel hidden" id="tab-custom">
+    <p class="tab-desc">Any number of images, any sizes. Set a print width for each and it packs them onto A4 sheet(s) with dashed cut lines, using as many sheets as needed.</p>
+    <div class="custom-layout">
+      <div class="rail">
+        <div class="drop" id="drop">
+          <div>Drop images here, or click to choose files</div>
+          <input type="file" id="fileInput" accept="image/*" multiple>
+        </div>
+        <div class="hint">JPG, PNG or WEBP. Add as many as you like.</div>
+        <hr class="divider">
+        <div class="field"><span>Sheet margin (mm)</span><input type="number" id="marginMm" value="6" min="0" max="20"></div>
+        <div class="field"><span>Gap between pieces (mm)</span><input type="number" id="gapMm" value="4" min="0" max="15"></div>
+        <button class="primary" id="btnArrange" disabled style="width:100%;">Arrange all & print</button>
+      </div>
+      <div class="list" id="list">
+        <div class="empty" id="emptyMsg">No images yet. Add some on the left, set a print width for each, then arrange & print.</div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<div id="printArea"></div>
+<input type="file" id="slotFileInput" accept="image/*" style="display:none">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script>
+(function(){
+  // ---------- shared helpers ----------
+  function readImage(file, cb){
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const img = new Image();
+      img.onload = () => cb({ dataUrl: ev.target.result, mime: file.type, name: file.name, w: img.naturalWidth, h: img.naturalHeight });
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+  function formatFor(mime){
+    if (mime === 'image/png') return 'PNG';
+    if (mime === 'image/webp') return 'WEBP';
+    return 'JPEG';
+  }
+  function fitBox(boxX, boxY, boxW, boxH, natW, natH, padMm){
+    const availW = boxW - padMm * 2;
+    const availH = boxH - padMm * 2;
+    const scale = Math.min(availW / natW, availH / natH);
+    const w = natW * scale, h = natH * scale;
+    return { x: boxX + (boxW - w) / 2, y: boxY + (boxH - h) / 2, w, h };
+  }
+  function setPageSize(orientation){
+    let style = document.getElementById('pageSizeStyle');
+    if (!style) { style = document.createElement('style'); style.id = 'pageSizeStyle'; document.head.appendChild(style); }
+    style.textContent = `@page{ size: A4 ${orientation}; margin: 0; }`;
+  }
+  const printArea = document.getElementById('printArea');
+  const slotFileInput = document.getElementById('slotFileInput');
+  let pendingSlot = null;
+
+  // ---------- tabs ----------
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.dataset.tab).classList.remove('hidden');
+    });
+  });
+
+  // ---------- generic slot grid (used by pair + quad) ----------
+  function makeSlotGrid(containerId, count, onChange){
+    const container = document.getElementById(containerId);
+    const items = new Array(count).fill(null);
+    function render(){
+      container.innerHTML = '';
+      items.forEach((im, i) => {
+        const slot = document.createElement('div');
+        slot.className = 'slot' + (im ? ' filled' : '');
+        if (im) {
+          slot.innerHTML = '<img src="' + im.dataUrl + '"><button class="remove" data-i="' + i + '">×</button>';
+        } else {
+          slot.innerHTML = '<span class="plus">+</span><span class="label">Image ' + (i + 1) + '</span>';
+        }
+        slot.addEventListener('click', (e) => {
+          if (e.target.classList.contains('remove')) return;
+          pendingSlot = { items, index: i, render, onChange };
+          slotFileInput.click();
+        });
+        slot.addEventListener('dragover', e => e.preventDefault());
+        slot.addEventListener('drop', e => {
+          e.preventDefault();
+          const file = e.dataTransfer.files[0];
+          if (file && file.type.startsWith('image/')) {
+            readImage(file, data => { items[i] = data; render(); onChange(items); });
+          }
+        });
+        container.appendChild(slot);
+      });
+      container.querySelectorAll('.remove').forEach(btn => {
+        btn.addEventListener('click', () => {
+          items[Number(btn.dataset.i)] = null;
+          render(); onChange(items);
+        });
+      });
+    }
+    render();
+    return { items, render };
+  }
+
+  slotFileInput.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (file && pendingSlot) {
+      readImage(file, data => {
+        pendingSlot.items[pendingSlot.index] = data;
+        pendingSlot.render();
+        pendingSlot.onChange(pendingSlot.items);
+      });
+    }
+    slotFileInput.value = '';
+  });
+
+  // ===================== TAB: 2-UP (A5 pair) =====================
+  const pairPdfBtn = document.getElementById('pairPdfBtn');
+  const pairPrintBtn = document.getElementById('pairPrintBtn');
+  const pairStatus = document.getElementById('pairStatus');
+
+  const pairGrid = makeSlotGrid('pairSlots', 2, items => {
+    const ready = items.every(Boolean);
+    pairPdfBtn.disabled = !ready;
+    pairPrintBtn.disabled = !ready;
+  });
+
+  pairPdfBtn.addEventListener('click', () => {
+    const a = pairGrid.items[0], b = pairGrid.items[1];
+    if (!a || !b) return;
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'landscape' });
+    const halfW = 148.5, pageH = 210, pad = 1;
+    const left = fitBox(0, 0, halfW, pageH, a.w, a.h, pad);
+    doc.addImage(a.dataUrl, formatFor(a.mime), left.x, left.y, left.w, left.h);
+    const right = fitBox(halfW, 0, halfW, pageH, b.w, b.h, pad);
+    doc.addImage(b.dataUrl, formatFor(b.mime), right.x, right.y, right.w, right.h);
+    doc.setDrawColor(180);
+    doc.setLineDashPattern([1, 1], 0);
+    doc.line(halfW, 0, halfW, pageH);
+    doc.save('a4-print.pdf');
+    pairStatus.textContent = 'Saved a4-print.pdf — print at 100% scale, landscape.';
+  });
+
+  pairPrintBtn.addEventListener('click', () => {
+    const a = pairGrid.items[0], b = pairGrid.items[1];
+    if (!a || !b) return;
+    setPageSize('landscape');
+    printArea.innerHTML =
+      '<div class="a4-page landscape">' +
+        '<div class="a5-half left"><img src="' + a.dataUrl + '"></div>' +
+        '<div class="a5-half right"><img src="' + b.dataUrl + '"></div>' +
+      '</div>';
+    window.print();
+  });
+
+  // ===================== TAB: 4-UP (A6 grid) =====================
+  const quadPdfBtn = document.getElementById('quadPdfBtn');
+  const quadPrintBtn = document.getElementById('quadPrintBtn');
+  const quadStatus = document.getElementById('quadStatus');
+
+  const quadGrid = makeSlotGrid('quadSlots', 4, items => {
+    const ready = items.every(Boolean);
+    quadPdfBtn.disabled = !ready;
+    quadPrintBtn.disabled = !ready;
+  });
+
+  quadPdfBtn.addEventListener('click', () => {
+    const imgs = quadGrid.items;
+    if (!imgs.every(Boolean)) return;
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+    const cellW = 105, cellH = 148.5, pad = 1;
+    imgs.forEach((im, i) => {
+      const col = i % 2, row = Math.floor(i / 2);
+      const box = fitBox(col * cellW, row * cellH, cellW, cellH, im.w, im.h, pad);
+      doc.addImage(im.dataUrl, formatFor(im.mime), box.x, box.y, box.w, box.h);
+    });
+    doc.setDrawColor(180);
+    doc.setLineDashPattern([1, 1], 0);
+    doc.line(cellW, 0, cellW, cellH * 2);
+    doc.line(0, cellH, cellW * 2, cellH);
+    doc.save('a4-print.pdf');
+    quadStatus.textContent = 'Saved a4-print.pdf — print at 100% scale, portrait.';
+  });
+
+  quadPrintBtn.addEventListener('click', () => {
+    const imgs = quadGrid.items;
+    if (!imgs.every(Boolean)) return;
+    setPageSize('portrait');
+    printArea.innerHTML =
+      '<div class="a4-page grid4">' +
+        imgs.map(im => '<div class="a6-cell"><img src="' + im.dataUrl + '"></div>').join('') +
+      '</div>';
+    window.print();
+  });
+
+  // ===================== TAB: CUSTOM CUT SHEET =====================
+  const customImages = [];
+  let nextId = 1;
+  const drop = document.getElementById('drop');
+  const fileInput = document.getElementById('fileInput');
+  const list = document.getElementById('list');
+  const emptyMsg = document.getElementById('emptyMsg');
+  const btnArrange = document.getElementById('btnArrange');
+
+  drop.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', e => addFiles(e.target.files));
+  ['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('drag'); }));
+  ['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('drag'); }));
+  drop.addEventListener('drop', e => addFiles(e.dataTransfer.files));
+
+  function addFiles(fileList){
+    Array.from(fileList).forEach(file => {
+      if (!file.type.startsWith('image/')) return;
+      readImage(file, data => {
+        customImages.push({ id: nextId++, name: data.name, dataUrl: data.dataUrl, mime: data.mime, w: data.w, h: data.h, widthCm: 9 });
+        renderCustomList();
+      });
+    });
+  }
+  function removeCustom(id){
+    const i = customImages.findIndex(x => x.id === id);
+    if (i > -1) customImages.splice(i, 1);
+    renderCustomList();
+  }
+  function renderCustomList(){
+    list.querySelectorAll('.card').forEach(c => c.remove());
+    emptyMsg.style.display = customImages.length ? 'none' : 'block';
+    customImages.forEach(im => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      const heightCm = (im.widthCm * im.h / im.w).toFixed(1);
+      card.innerHTML =
+        '<img src="' + im.dataUrl + '">' +
+        '<div class="meta">' +
+          '<span class="name">' + im.name + '</span>' +
+          '<span class="size-row">width <input type="number" min="1" max="20" step="0.5" value="' + im.widthCm + '" data-id="' + im.id + '" class="wIn"> cm → height ' + heightCm + ' cm</span>' +
+        '</div>' +
+        '<button class="remove-link" data-id="' + im.id + '">remove</button>';
+      list.appendChild(card);
+    });
+    list.querySelectorAll('.remove-link').forEach(b => b.addEventListener('click', () => removeCustom(Number(b.dataset.id))));
+    list.querySelectorAll('.wIn').forEach(inp => inp.addEventListener('input', () => {
+      const im = customImages.find(x => x.id === Number(inp.dataset.id));
+      if (im) { im.widthCm = Math.max(1, Number(inp.value) || 1); renderCustomList(); }
+    }));
+    btnArrange.disabled = customImages.length === 0;
+  }
+
+  btnArrange.addEventListener('click', () => {
+    setPageSize('portrait');
+    const margin = Math.max(0, Number(document.getElementById('marginMm').value) || 0);
+    const gap = Math.max(0, Number(document.getElementById('gapMm').value) || 0);
+    const pageW = 210, pageH = 297;
+    const usableW = pageW - margin * 2, usableH = pageH - margin * 2;
+
+    const items = customImages.map(im => {
+      let wmm = im.widthCm * 10, hmm = wmm * im.h / im.w;
+      if (wmm > usableW) { const s = usableW / wmm; wmm *= s; hmm *= s; }
+      return { dataUrl: im.dataUrl, wmm, hmm };
+    }).sort((a, b) => b.hmm - a.hmm);
+
+    const pages = [];
+    let current = [], x = margin, y = margin, shelfH = 0;
+    items.forEach(it => {
+      if (x + it.wmm > margin + usableW) { x = margin; y += shelfH + gap; shelfH = 0; }
+      if (y + it.hmm > margin + usableH) { if (current.length) pages.push(current); current = []; x = margin; y = margin; shelfH = 0; }
+      current.push(Object.assign({}, it, { x, y }));
+      x += it.wmm + gap;
+      shelfH = Math.max(shelfH, it.hmm);
+    });
+    if (current.length) pages.push(current);
+
+    printArea.innerHTML = pages.map(page =>
+      '<div class="a4-page">' +
+        page.map(it => '<div class="cut-item" style="left:' + it.x + 'mm; top:' + it.y + 'mm; width:' + it.wmm + 'mm; height:' + it.hmm + 'mm;"><img src="' + it.dataUrl + '"></div>').join('') +
+      '</div>'
+    ).join('');
+    window.print();
+  });
+
+  renderCustomList();
+})();
+</script>
+</body>
+</html>
